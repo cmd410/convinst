@@ -11,6 +11,7 @@ class TOPBAR_MT_convinst_menu(bpy.types.Menu):
         layout = self.layout
         layout.operator('convinst.collapse_operator')
         layout.operator('convinst.disassemble_operator')
+        layout.operator('convinst.add_into_operator')
 
     def menu_draw(self, context):
         self.layout.menu("TOPBAR_MT_convinst_menu")
