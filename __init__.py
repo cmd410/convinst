@@ -12,6 +12,7 @@ bl_info = {
     "blender": (2, 80, 0),
     "warning": "Early development",
     "category": "Add Mesh",
+    "tracker_url": "https://github.com/cmd410/convinst/issues"
 }
 
 
