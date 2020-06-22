@@ -6,6 +6,7 @@ from .util import find_origin_center
 
 @bpy_register
 class CollapseOperator(bpy.types.Operator):
+    '''Collapses selected meshes into one collection and spawns its instance here.'''  # NOQA
     bl_idname = "convinst.collapse_operator"
     bl_label = "Collapse objects into collection"
     bl_options = {'UNDO'}
