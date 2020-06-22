@@ -6,7 +6,7 @@ from ..regutil import bpy_register
 
 @bpy_register
 class AddIntoOperator(bpy.types.Operator):
-    '''Split collection instance into its components'''
+    '''Add selected objects into last selected collection instance'''
     bl_idname = "convinst.add_into_operator"
     bl_label = "Add object to collection"
     bl_options = {'UNDO'}
