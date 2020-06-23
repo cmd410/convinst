@@ -11,7 +11,7 @@ from .util import (
 class CollapseOperator(bpy.types.Operator):
     '''Collapses selected meshes into one collection and spawns its instance here.'''  # NOQA
     bl_idname = "convinst.collapse_operator"
-    bl_label = "Collapse objects into collection"
+    bl_label = "Collapse objects into instance"
     bl_options = {'UNDO'}
 
     collection_name: bpy.props.StringProperty(

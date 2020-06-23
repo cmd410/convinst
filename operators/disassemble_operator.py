@@ -27,6 +27,8 @@ class DisassembleOperator(bpy.types.Operator):
 
     def execute(self, context):
         instance = context.object
+        if instance is None:
+            return {'CANCELLED'}
         inst_rot = context.object.rotation_euler.to_quaternion()
 
         collection = context.object.instance_collection

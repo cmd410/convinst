@@ -6,9 +6,9 @@ from ..regutil import bpy_register
 
 @bpy_register
 class AddIntoOperator(bpy.types.Operator):
-    '''Add selected objects into last selected collection instance'''
+    '''Add selected objects into last active collection instance'''
     bl_idname = "convinst.add_into_operator"
-    bl_label = "Add object to collection"
+    bl_label = "Add to instance"
     bl_options = {'UNDO'}
 
     @classmethod
@@ -19,7 +19,7 @@ class AddIntoOperator(bpy.types.Operator):
             context.object.type == 'EMPTY',
             context.object.instance_type == 'COLLECTION',
             context.object.instance_collection is not None,
-            len(context.selected_objects)
+            len(context.selected_objects) >= 2
         ])
 
     def execute(self, context):
