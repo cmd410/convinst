@@ -1,7 +1,10 @@
 import bpy
 
 from ..regutil import bpy_register
-from .util import find_origin_center
+from .util import (
+    find_origin_center,
+    find_lowest_center,
+    find_highest_center)
 
 
 @bpy_register
@@ -14,6 +17,20 @@ class CollapseOperator(bpy.types.Operator):
     collection_name: bpy.props.StringProperty(
         name='Collection name',
         description='A name for new collection to collapse objects into'
+    )
+
+    pivot: bpy.props.EnumProperty(
+        name='Set pivot to',
+        items=[
+            ('CENTER', 'Origin center', 
+            'Set pivot to origin center of objects', 1),
+            ('LOWEST', 'Lowest center', 
+            'Set pivot to lowest center of objects', 2),
+            ('HIGHEST', 'Highest center', 
+            'Set pivot to highest center of objects', 3),
+            ('ACTIVE', 'Active object', 
+            'Set pivot to active object', 4),
+        ]
     )
 
     @classmethod
@@ -30,7 +47,14 @@ class CollapseOperator(bpy.types.Operator):
 
         objs = context.selected_objects
 
-        offset = find_origin_center(objs)
+        if self.pivot == 'CENTER':
+            offset = find_origin_center(objs)
+        elif self.pivot == 'LOWEST':
+            offset = find_lowest_center(objs)
+        elif self.pivot == 'HIGHEST':
+            offset = find_highest_center(objs)
+        elif self.pivot == 'ACTIVE':
+            offset = context.object.location.copy()
 
         bpy.ops.collection.objects_remove_all()
 

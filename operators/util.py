@@ -16,13 +16,38 @@ def find_lowest_center(objs):
         s += o.location
         ob_z = o.location.z
         bb = o.bound_box
-        for vert in [bb[0], bb[3], bb[4], bb[7]]:
+        for vert in bb:
+            coord = Vector(vert)
+            coord[2] *= o.scale[2]
+            coord.rotate(o.rotation_euler.to_quaternion())
+            coord = coord[2]
             if lowest_z is None:
-                lowest_z = vert[2] + ob_z
-            elif lowest_z > vert[2] + ob_z:
-                lowest_z = vert[2] + ob_z
+                lowest_z = coord + ob_z
+            elif lowest_z > coord + ob_z:
+                lowest_z = coord + ob_z
     s = s/len(objs)
     s[2] = lowest_z
+    return s
+
+
+def find_highest_center(objs):
+    s = Vector((0, 0, 0))
+    highest_z = None
+    for o in objs:
+        s += o.location
+        ob_z = o.location.z
+        bb = o.bound_box
+        for vert in bb:
+            coord = Vector(vert)
+            coord[2] *= o.scale[2]
+            coord.rotate(o.rotation_euler.to_quaternion())
+            coord = coord[2]
+            if highest_z is None:
+                highest_z = coord + ob_z
+            elif highest_z < coord + ob_z:
+                highest_z = coord + ob_z
+    s = s/len(objs)
+    s[2] = highest_z
     return s
 
 
