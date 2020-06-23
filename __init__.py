@@ -8,10 +8,9 @@ bl_info = {
     "name": "Convenient Instances",
     "description": "Creating collection instance assets made easy.",
     "author": "Crystal Melting Dot",
-    "version": (0, 1),
+    "version": (1, 0),
     "blender": (2, 80, 0),
-    "warning": "Early development",
-    "category": "Add Mesh",
+    "category": "Object",
     "tracker_url": "https://github.com/cmd410/convinst/issues",
     "location": "View3D -> Object menu -> convinst"
 }
