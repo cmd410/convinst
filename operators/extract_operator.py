@@ -28,6 +28,14 @@ class ExtractOperator(bpy.types.Operator):
         instance = context.object
         inst_rot = instance.rotation_euler.to_quaternion()
 
+        target_object.location[0] *= instance.scale[0]
+        target_object.location[1] *= instance.scale[1]
+        target_object.location[2] *= instance.scale[2]
+
+        target_object.scale[0] = target_object.scale[0] * instance.scale[0]
+        target_object.scale[1] = target_object.scale[1] * instance.scale[1]
+        target_object.scale[2] = target_object.scale[2] * instance.scale[2]
+
         target_object.location.rotate(inst_rot)
         target_object.location += instance.location
         target_object.rotation_mode = 'QUATERNION'

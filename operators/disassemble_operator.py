@@ -39,12 +39,19 @@ class DisassembleOperator(bpy.types.Operator):
 
             # Calculate Object position
             new_location = new_obj.location
+            new_location[0] *= instance.scale[0]
+            new_location[1] *= instance.scale[1]
+            new_location[2] *= instance.scale[2]
             new_location.rotate(inst_rot)
             new_location += instance.location
             new_obj.location = new_location
 
             new_obj.rotation_mode = 'QUATERNION'
             new_obj.rotation_quaternion.rotate(inst_rot)
+
+            new_obj.scale[0] = new_obj.scale[0] * instance.scale[0]
+            new_obj.scale[1] = new_obj.scale[1] * instance.scale[1]
+            new_obj.scale[2] = new_obj.scale[2] * instance.scale[2]
 
             for c in new_obj.users_collection:
                 c.objects.unlink(new_obj)
