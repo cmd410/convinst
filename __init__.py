@@ -8,7 +8,7 @@ bl_info = {
     "name": "Convenient Instances",
     "description": "Creating collection instance assets made easy.",
     "author": "Crystal Melting Dot",
-    "version": (1, 0),
+    "version": (1, 1),
     "blender": (2, 80, 0),
     "category": "Object",
     "tracker_url": "https://github.com/cmd410/convinst/issues",
