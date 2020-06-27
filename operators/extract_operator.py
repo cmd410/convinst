@@ -11,6 +11,18 @@ class ExtractOperator(bpy.types.Operator):
     bl_label = "Extract from instance"
     bl_options = {'UNDO'}
 
+    remove: bpy.props.BoolProperty(
+        name='Remove from collection',
+        default=False,
+        description='If checked the object will be removed from collection'
+    )
+
+    unlink: bpy.props.BoolProperty(
+        name='Unlink',
+        default=False,
+        description='If checked the object will have unique data'
+    )
+
     @classmethod
     def poll(cls, context):
         return all([
@@ -22,7 +34,15 @@ class ExtractOperator(bpy.types.Operator):
         ])
 
     def execute(self, context):
-        target_object = context.scene.convinst_extract.extract_target
+        original = context.scene.convinst_extract.extract_target
+
+        if self.remove:
+            target_object = original
+        else:
+            target_object = original.copy()
+            if self.unlink:
+                target_object.data = original.data.copy()
+
         if target_object is None:
             return {'CANCELLED'}
         instance = context.object
@@ -43,7 +63,7 @@ class ExtractOperator(bpy.types.Operator):
 
         for c in target_object.users_collection:
             c.objects.unlink(target_object)
-        
+
         context.collection.objects.link(target_object)
         context.scene.convinst_extract.extract_target = None
         return {'FINISHED'}
@@ -51,6 +71,8 @@ class ExtractOperator(bpy.types.Operator):
     def draw(self, context):
         layout = self.layout
         layout.prop(context.scene.convinst_extract, 'extract_target')
+        layout.prop(self, 'remove')
+        layout.prop(self, 'unlink')
 
     def invoke(self, context, event):
         wm = context.window_manager
