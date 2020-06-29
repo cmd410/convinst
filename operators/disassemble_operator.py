@@ -42,7 +42,7 @@ class DisassembleOperator(bpy.types.Operator):
         decaying_instances.append(instance_decay(instance, unlink=self.unlink))
         while decaying_instances:
             decay = decaying_instances.popleft()
-            for new_obj, rotation in decay:
+            for new_obj in decay:
                 if all([self.recursive,
                         new_obj.type == 'EMPTY',
                         new_obj.instance_type == 'COLLECTION',
