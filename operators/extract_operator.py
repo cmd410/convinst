@@ -1,8 +1,11 @@
+from collections import deque
+
 import bpy
 from mathutils import Euler
 
 from ..regutil import bpy_register
-from .util import validate_extract_target
+from .util import validate_extract_target, resolve_transform, unlink_object
+
 
 @bpy_register
 class ExtractOperator(bpy.types.Operator):
@@ -23,6 +26,12 @@ class ExtractOperator(bpy.types.Operator):
         description='If checked the object will have unique data'
     )
 
+    hierachy: bpy.props.BoolProperty(
+        name='Extract children',
+        default=False,
+        description='If checked the object\'s children will also be extracted and repareted to new object.'
+    )
+
     @classmethod
     def poll(cls, context):
         return all([
@@ -35,36 +44,55 @@ class ExtractOperator(bpy.types.Operator):
 
     def execute(self, context):
         original = context.scene.convinst_extract.extract_target
+        object_remap = dict()
+        
+        def get_object(original):
+            obj = object_remap.get(original)
+            if obj is None:
+                if self.remove:
+                    obj = original
+                else:
+                    obj = original.copy()
+                    if self.unlink:
+                        obj.data = original.data.copy()
+                object_remap[original] = obj
+            return obj
 
-        if self.remove:
-            target_object = original
-        else:
-            target_object = original.copy()
-            if self.unlink:
-                target_object.data = original.data.copy()
-
+        target_object = get_object(original)
+        #target_object.parent = None
         if target_object is None:
             return {'CANCELLED'}
+        
         instance = context.object
-        inst_rot = instance.rotation_euler.to_quaternion()
+        collection = instance.instance_collection
+        
+        resolve_transform(target_object, instance)
+        if target_object.parent in [i for i in collection.all_objects]:
+            target_object.parent = instance
+            target_object.location, target_object.rotation_quaternion, target_object.scale = \
+                target_object.matrix_world.decompose()
 
-        target_object.location[0] *= instance.scale[0]
-        target_object.location[1] *= instance.scale[1]
-        target_object.location[2] *= instance.scale[2]
+        if self.hierachy:
+            def get_children(obj):
+                return [
+                    i
+                    for i in collection.all_objects
+                    if i.parent == obj
+                ]
+            search = deque([original])
+            while search:
+                children = get_children(search.popleft())
+                for i in children:
+                    new_object = get_object(i)
+                    new_object.parent = get_object(i.parent)
+                search.extend(children)
 
-        target_object.scale[0] = target_object.scale[0] * instance.scale[0]
-        target_object.scale[1] = target_object.scale[1] * instance.scale[1]
-        target_object.scale[2] = target_object.scale[2] * instance.scale[2]
-
-        target_object.location.rotate(inst_rot)
-        target_object.location += instance.location
-        target_object.rotation_mode = 'QUATERNION'
-        target_object.rotation_quaternion.rotate(inst_rot)
-
-        for c in target_object.users_collection:
-            c.objects.unlink(target_object)
-
-        context.collection.objects.link(target_object)
+        # Relink objects
+        for i in object_remap.values():
+            unlink_object(i)
+            context.collection.objects.link(i)
+        
+        # Cleanup target variable
         context.scene.convinst_extract.extract_target = None
         return {'FINISHED'}
 
@@ -73,6 +101,7 @@ class ExtractOperator(bpy.types.Operator):
         layout.prop(context.scene.convinst_extract, 'extract_target')
         layout.prop(self, 'remove')
         layout.prop(self, 'unlink')
+        layout.prop(self, 'hierachy')
 
     def invoke(self, context, event):
         wm = context.window_manager

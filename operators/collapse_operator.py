@@ -62,13 +62,44 @@ class CollapseOperator(bpy.types.Operator):
         new_coll = bpy.data.collections.new(self.collection_name)
         scene_coll.children.link(new_coll)
 
+        instance_parent = None
         for o in objs:
             new_coll.objects.link(o)
-            o.location = o.location - offset
+            if o.parent is None:
+                o.location = o.location - offset
+            elif o.parent not in objs:
+                o.location, o.rotation_quaternion, o.scale = \
+                    o.matrix_world.decompose()
+                o.location -= offset
+                instance_parent = o.parent
+                o.parent = None
 
-        bpy.ops.object.collection_instance_add(
-            collection=new_coll.name,
-            location=offset)
+        current_scene = bpy.context.scene
+
+
+        instance = bpy.data.objects.new(new_coll.name, None)
+        instance.instance_type = 'COLLECTION'
+        instance.instance_collection = new_coll
+        instance.location = offset
+        
+        bpy.context.collection.objects.link(instance)
+        # FIXME setting parent to instance messes with its location
+        # need to find a way to negate it
+        # instance.parent = instance_parent
+        
+        for obj in current_scene.collection.all_objects:
+            if not obj.parent:
+                continue
+            if obj in objs:
+                continue
+            if obj.parent in objs:
+                obj.parent = instance
+                obj.location, obj.rotation_quaternion, obj.scale = \
+                    obj.matrix_world.decompose()
+                obj.location -= instance.location
+                obj.rotation_quaternion.rotate(
+                    instance.rotation_euler.to_quaternion()
+                    )
 
         return {'FINISHED'}
 

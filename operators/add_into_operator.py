@@ -1,6 +1,7 @@
 import bpy
 from mathutils import Euler
 
+from .util import unlink_object
 from ..regutil import bpy_register
 
 
@@ -32,22 +33,22 @@ class AddIntoOperator(bpy.types.Operator):
             if obj == instance:
                 continue
             
-            for c in obj.users_collection:
-                c.objects.unlink(obj)
-            
-            new_location = obj.location - inst_pos
-            new_location[0] /= instance.scale[0]
-            new_location[1] /= instance.scale[1]
-            new_location[2] /= instance.scale[2]
-            new_location.rotate(inst_rot.inverted())
-            
-            obj.scale[0] = obj.scale[0] / instance.scale[0]
-            obj.scale[1] = obj.scale[1] / instance.scale[1]
-            obj.scale[2] = obj.scale[2] / instance.scale[2]
+            if obj.parent is None:
+                new_location = obj.location - inst_pos
+                new_location[0] /= instance.scale[0]
+                new_location[1] /= instance.scale[1]
+                new_location[2] /= instance.scale[2]
+                new_location.rotate(inst_rot.inverted())
 
-            obj.location = new_location
-            obj.rotation_mode = 'QUATERNION'
-            obj.rotation_quaternion.rotate(inst_rot.inverted())
+                obj.scale[0] = obj.scale[0] / instance.scale[0]
+                obj.scale[1] = obj.scale[1] / instance.scale[1]
+                obj.scale[2] = obj.scale[2] / instance.scale[2]
+
+                obj.location = new_location
+                obj.rotation_mode = 'QUATERNION'
+                obj.rotation_quaternion.rotate(inst_rot.inverted())
+
+            unlink_object(obj)
             into_collection.objects.link(obj)
 
         return {'FINISHED'}

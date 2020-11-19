@@ -1,6 +1,7 @@
 import bpy
 from collections import deque
 
+from .util import resolve_transform, unlink_object
 from ..regutil import bpy_register
 
 
@@ -49,8 +50,10 @@ class DisassembleOperator(bpy.types.Operator):
                         new_obj.instance_collection]):
 
                     decaying_instances.append(
-                        instance_decay(new_obj, self.unlink))
+                        instance_decay(new_obj, self.unlink)
+                    )
                     continue
+                unlink_object(new_obj)
                 active_collection.objects.link(new_obj)
 
         bpy.data.objects.remove(instance, do_unlink=True)
@@ -63,32 +66,30 @@ class DisassembleOperator(bpy.types.Operator):
 
 def instance_decay(instance, unlink=False):
     """Generator that yields all objects from instance"""
-    if instance.rotation_mode != 'QUATERNION':
-        inst_rot = instance.rotation_euler.to_quaternion()
-    else:
-        inst_rot = instance.rotation_quaternion.copy()
     collection = instance.instance_collection
+    processed_objects = set()
+
+    object_remap = dict()
     for obj in collection.all_objects:
-        new_obj = obj.copy()
+        # check if object already been copied
+        if obj in processed_objects:
+            continue
+        processed_objects.add(obj)
+        new_obj = object_remap.get(obj) or obj.copy()
+        object_remap[obj] = new_obj
+        
+        # Unlink object data if needed
         if unlink and obj.type not in {'EMPTY'}:
             new_obj.data = obj.data.copy()
+        
+        if obj.parent is not None:
+            new_parent = object_remap.get(obj.parent)
+            if new_parent is None:
+                new_parent = obj.parent.copy()
+                object_remap[obj.parent] = new_parent
 
-        # Calculate Object position
-        new_location = new_obj.location
-        new_location[0] *= instance.scale[0]
-        new_location[1] *= instance.scale[1]
-        new_location[2] *= instance.scale[2]
-        new_location.rotate(inst_rot)
-        new_location += instance.location
-        new_obj.location = new_location
-
-        new_obj.rotation_mode = 'QUATERNION'
-        new_obj.rotation_quaternion.rotate(inst_rot)
-
-        new_obj.scale[0] = new_obj.scale[0] * instance.scale[0]
-        new_obj.scale[1] = new_obj.scale[1] * instance.scale[1]
-        new_obj.scale[2] = new_obj.scale[2] * instance.scale[2]
-
-        for c in new_obj.users_collection:
-            c.objects.unlink(new_obj)
+                yield new_parent
+            new_obj.parent = new_parent
+        else:
+            resolve_transform(new_obj, instance)
         yield new_obj
